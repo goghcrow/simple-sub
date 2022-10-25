@@ -1,0 +1,5 @@
+*.test
+*.out
+.idea/
+TODO.md
+terms/dot.go

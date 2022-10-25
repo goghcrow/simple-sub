@@ -1,0 +1,218 @@
+在 HM 类型系统定义里，𝜏 被称做类型（Type），它可以是一个
+- 原生类型 Primitive：𝜄
+- 类型变量 Type Variable：𝛼
+- 函数类型 Function ：𝜏 → 𝜏
+- (这里加入了 RecordType, 方便演示 subtyping)
+而 𝜎 被称做 Type Scheme。它即可以是一个 𝜏，即 type；也可以是一个 ∀𝛼.𝜎 (polymorphicType)。
+polymorphicType 不是 Type (simpleType)
+∀ 正是类型系统里的 𝜆
+一个形如 ∀𝛼.𝛼 → 𝛼 的 𝜆 在不同的地方被调用（实例化）时，会通过传入不同的 𝛼 而得到不同的类型 Type
+
+在HM类型系统里，所有的类型变量都是单态类型
+
+monotype = 𝜏
+polytype = ∀𝛼.𝜎
+𝜎 = type scheme = type
+𝜏 = 𝛼 | 𝜄 | 𝜏 → 𝜏
+𝜎 = 𝜏 | ∀𝛼.𝜎
+
+lambda = 𝜆
+type lambda = Λ
+
+𝜆 					vs 				Λ
+Value								monotype
+Literal Constant: 0,1,2,True,False	Primitive: Int,Bool
+Variable: 𝑥,𝑦 						Type Variable: 𝛼, 𝛽
+Variable Binding				    Type Variable Binding
+Immutable Variable					Immutable Type Variable
+Function Application				Type Instantiation
+Type								Kind
+
+
+------------------------------------------------------------------------------------
+MLsub 两种特殊类型
+------------------------------------------------------------------------------------
+1. set-theoretic types: union type and intersection type
+	𝜏0 ⊔ 𝜏1 represents the type of values that are either of type 𝜏0 or  of type 𝜏1.
+	𝜏0 ⊓ 𝜏1 represents the type of values that are both   of type 𝜏0 and of type 𝜏1.
+	union 是 或, inter 是 与
+
+MLsub 使用 union 和 intersection 类型来间接地约束类型变量。
+当一个类型变量 𝛼 是某个类型 𝜏 的子类型时（即 𝛼 类型的值可以用于 𝜏 类型），
+MLsub 在输入位置用 𝛼⊓𝜏 替换所有出现的 𝛼，确保任何作为 𝛼 值传递进来的参数也是 𝜏 值。
+同样，当 𝛼 是某个类型 𝜏 的超类型时（也就是说，𝜏 类型的值可以用于 𝛼 类型），
+MLsub 在输出位置用 𝛼⊔𝜏 替换所有出现的 𝛼 ，确保作为 𝛼 值返回的结果也是 𝜏 值。
+e.g.
+(−) :: int → int → int
+𝜆𝑥. { L = 𝑥 − 1 ; R = 𝑥 }  ::  𝛼 ⊓ int → { L : int; R : 𝛼 }
+𝜆 𝑓 . 𝜆𝑥. { L = 𝑓 𝑥 ; R = 𝑥 } :: (𝛽 → 𝛾) → 𝛼 ⊓ 𝛽 → { L : 𝛾 ; R : 𝛼 }
+简化为 (𝛼 → 𝛾) → 𝛼 → { L : 𝛾 ; R : 𝛼 }.
+
+2. RecursiveType
+一个递归类型 𝜇𝛼. 𝜏 代表一个我们可以随意展开多次的类型;
+例如，𝜇𝛼. (⊤ → 𝛼)，我们只写 𝜇𝛼. ⊤ → 𝛼，等同于 ⊤ → 𝜇𝛼. ⊤ → 𝛼, 这相当于⊤ → ⊤ → 𝜇𝛼. ⊤ → 𝛼，...，
+递归类型是可以无限制应用于任何参数（⊤的任何子类型）的函数的类型。
+递归类型在概念上是无限的 -- 如果完全展开，它将展开为一个无限深的树 ⊤ → ⊤ → ⊤ → ....
+
+------------------------------------------------------------------------------------
+Polarity of Type Positions
+------------------------------------------------------------------------------------
+term 作为输入的类型, consumer, input position, negative position/occurrence
+term 作为输出的类型, provider, output position, position position/occurrence
+positive occurrence 代表 provider: 一段程序"构建"出有 positive type 的值。
+negative occurrence 代表 consumer: 一段程序"需要"(或者说 abstract over) 有 negative type 的值。
+当我们构建一个类型为 A → B 的函数时，这个函数需要 A，并构建 B。 所以 A− → B+ ∈ PosTypes。
+当我们需要一个类型为 A → B 的函数时，我们构建 A 并提供给它，并需 要它返回的 B。所以 A+ → B− ∈ NegTypes。
+类型系统中对不同表达式的类型的唯一限制应当来自于 provider 与 consumer 连接起来时的一致性。
+所以使用 polar types 的类型推导只会产生 形如 A+ ≼ A− 的 constraint。
+e.g. (𝜏0 → 𝜏1) → 𝜏2
+类型 𝜏2 处于 positive position，因为它是主函数的输出，
+而函数类型 (𝜏0 → 𝜏1) 处于 negative position，因为它被作为主函数输入。
+另一方面，
+被作为输入的函数返回的 𝜏1 处于 negative position, 因为它是由调用者通过参数函数提供的,
+而 𝜏0 则处于 positive position 位置, 因为它是由主函数在调用参数函数时提供的。
+For instance, in (𝜏0 → 𝜏1) → 𝜏2, type 𝜏2 is in positive position since it is the output of the main function,
+and the function type (𝜏0 → 𝜏1) is in negative position, as it is taken as an input to the main function.
+On the other hand, 𝜏1, which is returned by the function taken as input is in negative position
+(since it is provided by callers via the argument function),
+and 𝜏0 is in positive position (since it is provided by the main function when calling the argument function).
+
+MLsub 的类型是有正负区分的, 极性限制意味着 union、intersection 的完整类型语法实际上使用有限制, 不能写出违反极性区分的类型
+union 是 positive type 且不能出现在 negative position
+intersection 是 negative type 且不能出现在 positive position
+e.g. int⊔string → 𝜏 非法, negative 只能出现 ⊓，𝜏 → int⊔string 合法, 但是没啥用
+
+𝜆𝑥. { L = 𝑥 − 1 ; R = if 𝑥 < 0 then 0 else 𝑥 }
+引入 𝛽 类型变量代表 if 表达式结果
+在类型推导(TI)期间, 会加入两个约束 nat ≤ 𝛽 与 𝛼 ≤ 𝛽 (即 if 的两个分支都 <: if 表达式的结果)
+=> 𝛼 ⊓ int → { L : int; R : 𝛽 },
+把所有 positive 位置出现的 𝛽 替换为  𝛽⊔nat⊔𝛼
+=> 𝛼 ⊓ int → { L : int; R : 𝛽 ⊔ nat ⊔ 𝛼 }
+𝛽 是多余的进行简化
+=> 𝛼 ⊓ int → { L : int; R : nat ⊔ 𝛼 }
+
+Java 允许使用类型变量来 quantify 类型，也允许用 subtypes 和 supertypes 来 bound 这些类型变量，
+unions 与 intersections 在适当 polarity 使用时, 只是一种间接 bound 类型变量的方式
+e.g. 1
+𝛼 ⊓ int → { L : int; R : 𝛽 ⊔ nat ⊔ 𝛼 }
+等同于 (类型变量输在在<>中, | 代表 union), 这里是 java 的方言, structurally-typed Java
+⟨𝛼 extends int, 𝛽 super nat | 𝛼⟩ (𝛼) → { L : int; R : 𝛽 }
+𝛼 是 int 的 subtype, 𝛽 同时是 nat 和 𝛼 的 supertype
+简化后
+𝛼 ⊓ int → { L : int; R : nat ⊔ 𝛼 }
+等同
+⟨𝛼 super nat extends int⟩ (𝛼) → { L : int; R : 𝛼 }
+简单的 Intersection 类型与简单的 bounded quantification 是可以互换的
+e.g. 2.
+negative positive, subtypes (extends) 与 intersection 互换
+class C {}
+Bool f<T extends C>(T) { return true }
+	f : <T <: C>. T -> Bool
+等同于
+Bool f<T>(T & C) { return true }
+	f : <T>. (T & C) -> Bool
+
+------------------------------------------------------------------------------------
+MLsub的 recursive type
+------------------------------------------------------------------------------------
+
+至于MLsub的 recursive type，可以通过 F-bounded polymorphism 来表达，Java 也支持(狗头)
+F-bounded polymorphism 允许一个类型变量 𝛼 被一个包含 𝛼 本身的类型表达式所约束(bound)。
+e.g. <T extends F<T>>
+参考：https://zhuanlan.zhihu.com/p/60520184
+public static <S extends Comparable> S min(S a, S b) {
+    // 丢失 compareTo 方法参数类型信息, 变成 object, 可以写出
+    a.compareTo(1)
+}
+F-bounded
+public static <T extends Comparable<T>> T Fmin(T a, T b) {
+    // 不会丢失 compareTo 方法参数类型信息, 变成 object
+    a.compareTo(1) // error, 需要 T 给了 int
+}
+
+intersections 类型可以用来编码类型变量的 upper bounds
+unions 类型可以用来编码类型变量的 lower bounds
+某种意义上, 用交并集+极性来编码类型变量的上下界是以上(交集编码上界,并集编码下界)反向的转换
+
+
+------------------------------------------------------------------------------------
+为啥需要递归类型
+------------------------------------------------------------------------------------
+因为在 coalesce 过程中, 会出现 "打结", 类型变量出现在自身的边界中，所以需要在 user-facing 类型语法中用递归类型来展示。
+e.g. s → t where bounds s=(lower=nil, upper=nil) t=(lower=nil, upper=(s → t)) , 则 user-facing 展示
+FunctionType(
+    TypeVariable("s"),
+    RecursiveType("t",
+        FunctionType(TypeVariable("s"), TypeVariable("t"))
+    )
+)
+𝛼 → (𝜇𝛽.𝛼 → 𝛽) 化简为 ⊤ → (𝜇𝛼.⊤ → 𝛼))
+
+
+------------------------------------------------------------------------------------
+类型 infer & coalesce 示例
+------------------------------------------------------------------------------------
+typeTerm(𝜆 𝑓 . 𝜆𝑥. 𝑓 (𝑓 𝑥))(empty)
+| typeTerm(𝜆𝑥. 𝑓 (𝑓 𝑥))(Map(𝑓 ↦→ 𝛼)) // 𝛼 fresh
+| | typeTerm(𝑓 (𝑓 𝑥))(Map(𝑓 ↦→ 𝛼, 𝑥 ↦→ 𝛽)) // 𝛽 fresh
+| | | typeTerm(𝑓 )(Map(𝑓 ↦→ 𝛼, 𝑥 ↦→ 𝛽)) = 𝛼
+| | | typeTerm(𝑓 𝑥)(Map(𝑓 ↦→ 𝛼, 𝑥 ↦→ 𝛽))
+| | | | typeTerm(𝑓 )(Map(𝑓 ↦→ 𝛼, 𝑥 ↦→ 𝛽)) = 𝛼
+| | | | typeTerm(𝑥)(Map(𝑓 ↦→ 𝛼, 𝑥 ↦→ 𝛽)) = 𝛽
+| | | | constrain(𝛼, Function(𝛽, 𝛾)) // 𝛾 fresh
+| | | | | 𝛼.upperBounds = Function(𝛽, 𝛾) :: 𝛼.upperBounds
+| | | = 𝛾
+| | | constrain(𝛼, Function(𝛾, 𝛿)) // 𝛿 fresh
+| | | | 𝛼.upperBounds = Function(𝛾, 𝛿) :: 𝛼.upperBounds
+| | = 𝛿
+| = Function(𝛽, 𝛿)
+= Function(𝛼, Function(𝛽, 𝛿))
+
+𝛼 这时有两个上界 Function(𝛽, 𝛾), Function(𝛾,𝛿)
+coalescing 算法把推导出的 SimpleType 展开成展示类型
+
+coalesceType(Function(𝛼, Function(𝛽, 𝛿)))
+| do(Function(𝛼, Function(𝛽, 𝛿)), true)(empty)
+| | do(𝛼, false)(empty)
+| | | val bounds = Function(𝛽, 𝛾) :: Function(𝛾, 𝛿) :: Nil
+| | | val boundTypes
+| | | | do(Function(𝛽, 𝛾), false)(Set(𝛼 ↦→false)) = 𝛽 → 𝛾
+| | | | do(Function(𝛾, 𝛿), false)(Set(𝛼 ↦→false)) = 𝛾 → 𝛿
+| | | = 𝛽 → 𝛾 :: 𝛾 → 𝛿 :: Nil
+| | = 𝛼 ⊓ (𝛽 → 𝛾) ⊓ (𝛾 → 𝛿)
+| | do(Function(𝛽, 𝛿), true)(empty)
+| | | do(𝛽, false)(empty) = 𝛽
+| | | do(𝛿, true)(empty) = 𝛿
+| | = 𝛽 → 𝛿
+| = 𝛼 ⊓ (𝛽 → 𝛾) ⊓ (𝛾 → 𝛿) → 𝛽 → 𝛿
+= 𝛼 ⊓ (𝛽 → 𝛾) ⊓ (𝛾 → 𝛿) → 𝛽 → 𝛿
+简化 𝛼 ⊓ (𝛽 ⊔𝛾 → 𝛾 ⊓ 𝛿) → 𝛽 → 𝛿, 𝛼 只出现在 negative 位置, 𝛿 and 𝛾 co-occur negative, 可以合并
+简化 (𝛽 ⊔𝛾 → 𝛾) → 𝛽 → 𝛾
+
+------------------------------------------------------------------------------------
+let 多态与递归
+------------------------------------------------------------------------------------
+let 多态
+传统的ML语言中，只有局部 let 绑定才可以产生多态类型。
+需要跟踪 generalized typing scheme，这些 typing scheme 在 let body 中每次出现，都需要使用 fresh variable 进行 instantiated，
+并确保不能 generalized 环境中存在的类型变量，否则 unsound。
+let y = 1
+let f = x -> (x, y) in f(1);f("s")
+泛化 (x, y) 时不能泛化 y, y 的 level 比当前 x 的 rhs 的 level 低
+
+One way of determining which type variables to generalize is to scan the current environment,
+looking for references to the type variables in question. However, that is quite inefficient (it adds a
+linear-time operation in an important part of the algorithm).
+
+Efficient generalization in ML. A better approach is to use levels. The idea is that all fresh type
+variables created inside the right-hand side of a let binding are first assigned a higher level, which
+indicates that they should be generalized. However, the level of a variable is lowered when the
+variable “escapes” through a constraint into the enclosing environment, preventing its future generalization.
+
+低 level 的类型变量永远不会通过边界引用高 level 类型变量, 必要时复制类型结构保证
+
+Simple-sub typing with levels. We can use the same idea to achieve let polymorphism in Simplesub,
+though we have to be a little more careful, because we do not merely unify type variables as in
+ML, but instead we constrain their bounds. Our idea is to make sure that lower-level type variables
+never refer to higher-level ones through their bounds, and to enforce that property by duplicating
+type structures as needed, when it would otherwise be violated by the addition of a bound.
