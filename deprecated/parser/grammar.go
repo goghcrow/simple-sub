@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"github.com/goghcrow/simple-sub/front/oper"
-	"github.com/goghcrow/simple-sub/front/token"
+	"github.com/goghcrow/simple-sub/deprecated/oper"
+	"github.com/goghcrow/simple-sub/deprecated/token"
 	"github.com/goghcrow/simple-sub/terms"
 	"github.com/goghcrow/simple-sub/util"
 )

@@ -6,7 +6,7 @@ type TypeError struct {
 	Msg string
 }
 
-func NewTypeError(format string, a ...any) TypeError {
+func NewTypeError(format string, a ...interface{}) TypeError {
 	return TypeError{Msg: fmt.Sprintf(format, a...)}
 }
 

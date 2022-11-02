@@ -1,8 +1,8 @@
 package lexer
 
 import (
-	"github.com/goghcrow/simple-sub/front/oper"
-	"github.com/goghcrow/simple-sub/front/token"
+	"github.com/goghcrow/simple-sub/deprecated/oper"
+	"github.com/goghcrow/simple-sub/deprecated/token"
 )
 
 var keywords = []token.Type{

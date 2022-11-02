@@ -1,9 +1,11 @@
-package trans
+package parser
 
 import (
-	"github.com/goghcrow/simple-sub/front/token"
+	"github.com/goghcrow/simple-sub/deprecated/token"
 	. "github.com/goghcrow/simple-sub/terms"
 )
+
+type Translate func(expr Term) Term
 
 func Desugar(term Term) Term {
 	switch t := term.(type) {

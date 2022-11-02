@@ -1,9 +1,20 @@
 package terms
 
 import (
-	"github.com/goghcrow/simple-sub/front/oper"
+	"github.com/goghcrow/simple-sub/deprecated/oper"
 	"github.com/goghcrow/simple-sub/util"
 )
+
+//func Str(s string, loc loc.Loc) *StrExpr {
+//	v, err := strconv.Unquote(s)
+//	util.Assert(err == nil, "invalid string literal: %s", s)
+//	return &StrExpr{loc, s, v}
+//}
+//func Num(s string, loc loc.Loc) *NumExpr {
+//	f, err := parseNum(s)
+//	util.Assert(err == nil, "invalid num literal %s", s)
+//	return &NumExpr{loc, s, f}
+//}
 
 func Bool(val bool) *LiteralBool                 { return &LiteralBool{Val: val} }
 func Int(val int64) *LiteralInt                  { return &LiteralInt{Val: val} }

@@ -7,7 +7,7 @@ import (
 func (l *LiteralInt) String() string    { return fmt.Sprintf("Int(%d)", l.Val) }
 func (l *LiteralBool) String() string   { return fmt.Sprintf("Bool(%t)", l.Val) }
 func (l *LiteralFloat) String() string  { return fmt.Sprintf("Float(%f)", l.Val) }
-func (l *LiteralString) String() string { return fmt.Sprintf("LitStr(%q)", l.Val) }
+func (l *LiteralString) String() string { return fmt.Sprintf("Str(%q)", l.Val) }
 func (v *Variable) String() string      { return fmt.Sprintf("Var(%s)", v.Name) }
 func (l *Lambda) String() string        { return fmt.Sprintf("Fun(%s, %s)", l.Name, l.Rhs) }
 func (a *Application) String() string   { return fmt.Sprintf("App(%s %s)", a.Lhs, a.Rhs) }

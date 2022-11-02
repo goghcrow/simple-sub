@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"github.com/goghcrow/simple-sub/front/lexer"
-	"github.com/goghcrow/simple-sub/front/oper"
+	"github.com/goghcrow/simple-sub/deprecated/lexer"
+	"github.com/goghcrow/simple-sub/deprecated/oper"
 	. "github.com/goghcrow/simple-sub/terms"
 	"testing"
 )

@@ -1,7 +1,7 @@
 package oper
 
 import (
-	"github.com/goghcrow/simple-sub/front/token"
+	"github.com/goghcrow/simple-sub/deprecated/token"
 	"regexp"
 	"strings"
 )
