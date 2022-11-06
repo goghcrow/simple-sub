@@ -12,6 +12,7 @@ func (v *Variable) String() string      { return fmt.Sprintf("Var(%s)", v.Name) 
 func (l *Lambda) String() string        { return fmt.Sprintf("Fun(%s, %s)", l.Name, l.Rhs) }
 func (a *Application) String() string   { return fmt.Sprintf("App(%s %s)", a.Lhs, a.Rhs) }
 func (t *Tuple) String() string         { return fmt.Sprintf("Tuple(%s)", t.Elms) }
+func (t *List) String() string          { return fmt.Sprintf("List(%s)", t.Elms) }
 func (f *Field) String() string         { return fmt.Sprintf("Field(%s, %s)", f.Name, f.Term) }
 func (r *Record) String() string        { return fmt.Sprintf("Rcd(%s)", r.Fields) }
 func (s *Selection) String() string     { return fmt.Sprintf("Sel(%s, %s)", s.Recv.String(), s.FieldName) }
@@ -31,7 +32,7 @@ func (b *Binary) String() string {
 }
 
 func (p Program) String() string { return fmt.Sprintf("Program(%s)", p.Defs) }
-func (d Define) String() string {
+func (d Declaration) String() string {
 	if d.Rec {
 		return fmt.Sprintf("Let(%s, %s)", d.Name, d.Rhs)
 	} else {

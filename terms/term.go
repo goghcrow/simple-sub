@@ -40,6 +40,9 @@ type (
 	Tuple struct { // as in: (1, 2)
 		Elms []Term
 	}
+	List struct { // as in: [1, 2]
+		Elms []Term
+	}
 	Variable struct { // as in: 𝑥
 		Name string
 	}
@@ -63,7 +66,7 @@ type (
 		FieldName string
 	}
 	LetDefine struct { // let 𝑥 = 42 in 𝑥
-		Define
+		Declaration
 		Body Term
 	}
 )
@@ -91,15 +94,15 @@ type (
 	}
 )
 
-// Define : Global Let Binding
-type Define struct {
+// Declaration : Top Level Let Binding
+type Declaration struct {
 	Rec  bool
 	Name string
 	Rhs  Term
 }
 
 type Program struct {
-	Defs []*Define
+	Defs []*Declaration
 }
 
 func (_ *LiteralInt) _termNop()    {}
@@ -107,6 +110,7 @@ func (_ *LiteralBool) _termNop()   {}
 func (_ *LiteralFloat) _termNop()  {}
 func (_ *LiteralString) _termNop() {}
 func (_ *Tuple) _termNop()         {}
+func (_ *List) _termNop()          {}
 func (_ *Variable) _termNop()      {}
 func (_ *Lambda) _termNop()        {}
 func (_ *Application) _termNop()   {}
@@ -119,5 +123,5 @@ func (_ *Group) _termNop()  {}
 func (_ *Unary) _termNop()  {}
 func (_ *Binary) _termNop() {}
 
-func (_ *Program) _termNop() {}
-func (_ *Define) _termNop()  {}
+func (_ *Program) _termNop()     {}
+func (_ *Declaration) _termNop() {}

@@ -186,8 +186,8 @@ func parseIf(p *parser, bp oper.BP, iff *token.Token) terms.Term {
 	return terms.Iff(cond, then, els)
 }
 
-func (p *parser) parseTopLevel(bp oper.BP) *terms.Define {
-	return doParseLet(true, p, bp, p.mustEat(token.LET)).(*terms.Define)
+func (p *parser) parseTopLevel(bp oper.BP) *terms.Declaration {
+	return doParseLet(true, p, bp, p.mustEat(token.LET)).(*terms.Declaration)
 }
 
 func parseLet(p *parser, bp oper.BP, let *token.Token) terms.Term {
@@ -233,10 +233,10 @@ func doParseLet(topLevel bool, p *parser, bp oper.BP, let *token.Token) terms.Te
 		p.syntaxAssert(topLevel, "expect in")
 		if len(xs) == 1 {
 			// let rec id = e
-			return terms.Def(xs[0], rhs, rec != nil)
+			return terms.Decl(xs[0], rhs, rec != nil)
 		} else {
 			// let rec f x1 x2 ... xn = e
-			return terms.Def(xs[0], terms.LamN(xs[1:], rhs), rec != nil)
+			return terms.Decl(xs[0], terms.LamN(xs[1:], rhs), rec != nil)
 		}
 	}
 }

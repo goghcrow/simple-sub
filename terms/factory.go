@@ -21,17 +21,20 @@ func Int(val int64) *LiteralInt                  { return &LiteralInt{Val: val} 
 func Float(val float64) *LiteralFloat            { return &LiteralFloat{Val: val} }
 func Str(val string) *LiteralString              { return &LiteralString{Val: val} }
 func Tup(xs ...Term) *Tuple                      { return &Tuple{xs} }
+func Lst(xs ...Term) *List                       { return &List{xs} }
 func Var(name string) *Variable                  { return &Variable{Name: name} }
 func Lam(name string, rhs Term) *Lambda          { return &Lambda{Name: name, Rhs: rhs} }
 func App(lhs Term, rhs Term) *Application        { return &Application{Lhs: lhs, Rhs: rhs} }
 func Rcd(xs []Field) *Record                     { return &Record{Fields: xs} }
 func Sel(recv Term, fieldName string) *Selection { return &Selection{Recv: recv, FieldName: fieldName} }
 func Let(name string, rhs Term, body Term, rec bool) *LetDefine {
-	return &LetDefine{*Def(name, rhs, rec), body}
+	return &LetDefine{*Decl(name, rhs, rec), body}
 }
 
-func Pgrm(defs []*Define) *Program                { return &Program{Defs: defs} }
-func Def(name string, rhs Term, rec bool) *Define { return &Define{Name: name, Rhs: rhs, Rec: rec} }
+func Pgrm(defs []*Declaration) *Program { return &Program{Defs: defs} }
+func Decl(name string, rhs Term, rec bool) *Declaration {
+	return &Declaration{Name: name, Rhs: rhs, Rec: rec}
+}
 
 func Grp(term Term) *Group                                   { return &Group{term} }
 func Iff(cond, then, els Term) *If                           { return &If{cond, then, els} }

@@ -165,6 +165,62 @@ func TestParser(t *testing.T) {
 			result:  "Rcd([{true Bool(true)} {false Bool(false)}])",
 		},
 		{
+			name:    "Tuple",
+			p:       _Expr,
+			input:   `()`,
+			success: true,
+			result:  "Tuple([])",
+		},
+		{
+			name:    "Tuple",
+			p:       _Expr,
+			input:   `(1,)`, // 一个元素的 tuple 需要多个 comma
+			success: true,
+			result:  "Tuple([Int(1)])",
+		},
+		{
+			name:    "Tuple",
+			p:       _Expr,
+			input:   `(1,2)`,
+			success: true,
+			result:  "Tuple([Int(1) Int(2)])",
+		},
+		{
+			name:    "Tuple",
+			p:       _Expr,
+			input:   `(1,2, f a)`,
+			success: true,
+			result:  "Tuple([Int(1) Int(2) App(Var(f) Var(a))])",
+		},
+		{
+			name:    "List",
+			p:       _Expr,
+			input:   `[]`,
+			success: true,
+			result:  "List([])",
+		},
+		{
+			name:    "Tuple",
+			p:       _Expr,
+			input:   `[1]`, // 一个元素的 tuple 需要多个 comma
+			success: true,
+			result:  "List([Int(1)])",
+		},
+		{
+			name:    "Tuple",
+			p:       _Expr,
+			input:   `[1,2]`,
+			success: true,
+			result:  "List([Int(1) Int(2)])",
+		},
+		{
+			name:    "Tuple",
+			p:       _Expr,
+			input:   `[1,2, f a]`,
+			success: true,
+			result:  "List([Int(1) Int(2) App(Var(f) Var(a))])",
+		},
+		{
 			name:    "Fun",
 			p:       _Expr,
 			input:   `fun id -> id`,

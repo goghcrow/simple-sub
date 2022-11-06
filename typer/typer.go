@@ -1,7 +1,9 @@
 package typer
 
 import (
+	"fmt"
 	"github.com/goghcrow/simple-sub/terms"
+	"github.com/goghcrow/simple-sub/types"
 )
 
 // 使用内部表示的 compactType 进行类型推导
@@ -64,4 +66,24 @@ func (t *Typer) inferType(term terms.Term, ctx *Ctx) SimpleType {
 
 func (t *Typer) show(st SimpleType) string {
 	return t.coalesceType(st).Show()
+}
+
+func (t *Typer) InferTypes(pgrm *terms.Program, ctx *Ctx) (res []types.Type, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+		}
+	}()
+	tyv, err := t.inferTypes(pgrm, ctx)
+	if err != nil {
+		return nil, err
+	}
+	res = make([]types.Type, len(tyv))
+	for i, poly := range tyv {
+		ty := poly.instantiate(t, 0)
+		cty := t.canonicalizeType(ty)
+		sty := t.simplifyType(cty)
+		res[i] = t.coalesceCompactType(sty)
+	}
+	return
 }

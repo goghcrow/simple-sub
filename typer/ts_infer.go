@@ -7,7 +7,7 @@ import "github.com/goghcrow/simple-sub/terms"
 // 出现在 let-body 类型变量会被认为是 universally quantified
 
 // 注意 let 需要 level + 1, 低于当前 level 的 type var 能逃逸当前环境的约束
-func (t *Typer) typeLetRhs(let *terms.Define, ctx *Ctx, lvl int) *PolymorphicType {
+func (t *Typer) typeLetRhs(let *terms.Declaration, ctx *Ctx, lvl int) *PolymorphicType {
 	if let.Rec {
 		// 为 let-binding rhs 在 context 绑定一个类型变量, 之后检查( constrain )其为 实际的 rhs 类型的 supertype
 		eTy := t.freshVar(lvl + 1)
@@ -80,7 +80,7 @@ func (t *Typer) typeTerm(term terms.Term, ctx *Ctx, lvl int) SimpleType {
 		}
 		return Rcd(xs)
 	case *terms.LetDefine:
-		nTy := t.typeLetRhs(&tm.Define, ctx, lvl)
+		nTy := t.typeLetRhs(&tm.Declaration, ctx, lvl)
 		nctx := ctx.Extend(tm.Name, nTy)
 		return t.typeTerm(tm.Body, nctx, lvl)
 	default:

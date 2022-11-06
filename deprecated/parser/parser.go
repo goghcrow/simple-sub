@@ -21,7 +21,7 @@ func (p *parser) Parse(toks []*token.Token) *terms.Program {
 	p.idx = 0
 	p.toks = toks
 
-	var xs []*terms.Define
+	var xs []*terms.Declaration
 	p.tryEatLines()
 	for p.peek() != lexer.EOF {
 		xs = append(xs, p.parseTopLevel(0))

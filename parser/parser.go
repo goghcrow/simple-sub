@@ -6,7 +6,7 @@ import (
 	"github.com/goghcrow/simple-sub/terms"
 )
 
-//goland:noinspection GoSnakeCaseUsage
+//goland:noinspection GoSnakeCaseUsage,SpellCheckingInspection
 const (
 	LET lexer.TokenKind = iota + 1
 	REC
@@ -17,6 +17,7 @@ const (
 	ELSE
 	TRUE
 	FALSE
+	NOT
 
 	IDENT
 
@@ -28,8 +29,28 @@ const (
 	COMMA
 	ASSIGN
 
-	ARROW
 	DOT
+	ARROW
+
+	//PLUS
+	//PLUSF
+	//SUB
+	//SUBF
+	//MUL
+	//MULF
+	//DIV
+	//DIVF
+
+	LE
+	LT
+	GE
+	GT
+	EQ
+	NE
+
+	LOGIC_OR
+	LOGIC_AND
+	LOGIC_NOT
 
 	LEFT_PAREN
 	RIGHT_PAREN
@@ -43,28 +64,6 @@ const (
 	BLOCK_COMMENT
 	LINE_COMMENT
 )
-
-type Keyword struct {
-	lexer.TokenKind
-	Lexeme string
-}
-
-var keywords = []Keyword{
-	{LET, "let"},
-	{REC, "rec"},
-	{IN, "in"},
-	{FUN, "fun"},
-	{IF, "if"},
-	{THEN, "then"},
-	{ELSE, "else"},
-	{TRUE, "true"},
-	{FALSE, "false"},
-}
-
-var builtInOpers = []lexer.Operator{
-	{DOT, ".", lexer.BP_MEMBER, lexer.INFIX_L},
-	{ARROW, "->", lexer.BP_MEMBER, lexer.INFIX_R},
-}
 
 var lex = lexer.BuildLexer(func(l *lexer.Lexicon) {
 	l.Regex(WHITESPACE, "[ \r\t]+").Skip() // 不能使用\s+, 要单独处理换行
@@ -83,13 +82,39 @@ var lex = lexer.BuildLexer(func(l *lexer.Lexicon) {
 	l.Str(LEFT_BRACE, "{")
 	l.Str(RIGHT_BRACE, "}")
 
-	for _, keyword := range keywords {
-		l.Keyword(keyword.TokenKind, keyword.Lexeme)
-	}
+	l.Keyword(LET, "let")
+	l.Keyword(REC, "rec")
+	l.Keyword(IN, "in")
+	l.Keyword(FUN, "fun")
+	l.Keyword(IF, "if")
+	l.Keyword(THEN, "then")
+	l.Keyword(ELSE, "else")
+	l.Keyword(TRUE, "true")
+	l.Keyword(FALSE, "false")
+	l.Keyword(NOT, "not")
 
-	for _, oper := range lexer.SortOpers(builtInOpers) {
-		l.PrimOper(oper.TokenKind, oper.Lexeme)
-	}
+	l.Oper(DOT, ".")
+	l.Oper(ARROW, "->")
+
+	//l.Oper(PLUSF, "+.")
+	//l.Oper(PLUS, "+")
+	//l.Oper(SUBF, "-.")
+	//l.Oper(SUB, "-")
+	//l.Oper(MULF, "*.")
+	//l.Oper(MUL, "*")
+	//l.Oper(DIVF, "/.")
+	//l.Oper(DIV, "/")
+
+	l.Oper(LE, "<=")
+	l.Oper(LT, "<")
+	l.Oper(GE, ">=")
+	l.Oper(GT, ">")
+	l.Oper(EQ, "==")
+	l.Oper(NE, "!=")
+
+	l.Oper(LOGIC_OR, "||")
+	l.Oper(LOGIC_AND, "&&")
+	l.Oper(LOGIC_NOT, "!")
 
 	l.Regex(FLOAT, "[-+]?(?:0|[1-9][0-9]*)(?:[.][0-9]+)+(?:[eE][-+]?[0-9]+)?")
 	l.Regex(FLOAT, "[-+]?(?:0|[1-9][0-9]*)(?:[.][0-9]+)?(?:[eE][-+]?[0-9]+)+")
@@ -120,6 +145,8 @@ func init() {
 		SubTermNoSel = NewRule()
 		SubTerm      = NewRule()
 		Record       = NewRule()
+		Tuple        = NewRule()
+		List         = NewRule()
 		Fun          = NewRule()
 		Let          = NewRule()
 		Ite          = NewRule()
@@ -160,6 +187,34 @@ func init() {
 		}
 		return terms.Rcd(xs)
 	}
+	applyTuple := func(v interface{}) interface{} {
+		if v == nil {
+			return terms.Tup() // 0
+		}
+		a := v.([]interface{})
+		fst := a[0].(terms.Term)
+		if a[2] == nil {
+			return terms.Tup(fst) // 1
+		}
+		rest := a[2].([]interface{})
+		xs := make([]terms.Term, 1+len(rest))
+		xs[0] = fst
+		for i, it := range rest {
+			xs[i+1] = it.(terms.Term)
+		}
+		return terms.Tup(xs...) // n
+	}
+	applyList := func(v interface{}) interface{} {
+		if v == nil {
+			return terms.Lst()
+		}
+		els := v.([]interface{})
+		xs := make([]terms.Term, len(els))
+		for i, el := range els {
+			xs[i] = el.(terms.Term)
+		}
+		return terms.Lst(xs...)
+	}
 	applyFun := func(v interface{}) interface{} {
 		t4 := v.([]interface{})
 		return terms.LamN(t4[1].([]string), t4[3].(terms.Term))
@@ -196,13 +251,13 @@ func init() {
 		t4 := v.([]interface{})
 		name := t4[1].(string)
 		rhs := t4[3].(terms.Term)
-		return terms.Def(name, rhs, t4[0] != nil)
+		return terms.Decl(name, rhs, t4[0] != nil)
 	}
 	applyPgrm := func(v interface{}) interface{} {
 		xs := v.([]interface{})
-		defs := make([]*terms.Define, len(xs))
+		defs := make([]*terms.Declaration, len(xs))
 		for i, x := range xs {
-			defs[i] = x.(*terms.Define)
+			defs[i] = x.(*terms.Declaration)
 		}
 		return terms.Pgrm(defs)
 	}
@@ -218,6 +273,30 @@ func init() {
 		return xs
 	}
 
+	//Signed       = NewRule()
+	//Factor       = NewRule()
+	//Addition     = NewRule()
+	//AddSub := Alt(Tok(PLUS), Tok(SUB), Tok(PLUSF), Tok(SUBF))
+	//MulDiv := Alt(Tok(MUL), Tok(MULF), Tok(DIV), Tok(DIVF))
+	//Signed.Pattern = Seq(OptSc(Alt(Tok(PLUS), Tok(SUB))), Term).Map(applyUnary)
+	//Factor.Pattern = LRecSc(Signed, Seq(MulDiv, Signed), applyBinary)
+	//Addition.Pattern = LRecSc(Factor, Seq(AddSub, Factor), applyBinary)
+	//applyUnary := func(v interface{}) interface{} {
+	//	t2 := v.([]interface{})
+	//	oper := t2[0].(*lexer.Token)
+	//	rhs := t2[1].(terms.Term)
+	//	if oper == nil {
+	//		return rhs
+	//	}
+	//	return terms.App(terms.Var(oper.Lexeme), rhs)
+	//}
+	//applyBinary := func(a, b interface{}) interface{} {
+	//	lhs := a.(interface{}).(terms.Term)
+	//	oper := b.([]interface{})[0].(*lexer.Token)
+	//	rhs := b.([]interface{})[1].(terms.Term)
+	//	return terms.AppN(terms.Var(oper.Lexeme), lhs, rhs)
+	//}
+
 	Term.Pattern = Alt(Let, Fun, Ite, Apps)
 	Const.Pattern = Alt(
 		Tok(INT).Map(applyInt),
@@ -226,17 +305,31 @@ func init() {
 		Tok(TRUE).Map(applyTrue),
 		Tok(FALSE).Map(applyFalse),
 	)
-
-	atLeastIdent := Seq(Ident, RepSc(Ident)).Map(applyAtLeastIdent)
 	Ident.Pattern = Alt(Tok(IDENT), Tok(TRUE), Tok(FALSE)).Map(applyIdent)
 	Variable.Pattern = Tok(IDENT).Map(applyVar)
 	Parens.Pattern = KMid(Tok(LEFT_PAREN), Term, Tok(RIGHT_PAREN))
-	SubTermNoSel.Pattern = Alt(Parens, Record, Const, Variable)
+	SubTermNoSel.Pattern = Alt(Parens, Record, Tuple, List, Const, Variable)
 	SubTerm.Pattern = Seq(SubTermNoSel, RepSc(KRight(Tok(DOT), Ident))).Map(applySubTerm)
-	Record.Pattern = KMid(Tok(LEFT_BRACE), OptSc(ListSc(Seq(Ident, Tok(COLON), Term), Tok(COMMA))), Tok(RIGHT_BRACE)).Map(applyRecord)
+	Record.Pattern = KMid(
+		Tok(LEFT_BRACE),
+		OptSc(ListSc(Seq(Ident, Tok(COLON), Term), Tok(COMMA))),
+		Tok(RIGHT_BRACE),
+	).Map(applyRecord)
+	Tuple.Pattern = KMid(
+		Tok(LEFT_PAREN),
+		Alt(Nil(), Seq(Term, Tok(COMMA), OptSc(ListSc(Term, Tok(COMMA))))),
+		Tok(RIGHT_PAREN),
+	).Map(applyTuple)
+	List.Pattern = KMid(
+		Tok(LEFT_BRACKET),
+		OptSc(ListSc(Term, Tok(COMMA))),
+		Tok(RIGHT_BRACKET),
+	).Map(applyList)
+	atLeastIdent := Seq(Ident, RepSc(Ident)).Map(applyAtLeastIdent)
 	Fun.Pattern = Seq(Tok(FUN), atLeastIdent, Tok(ARROW), Term).Map(applyFun)
 	Let.Pattern = Seq(KRight(Tok(LET), OptSc(Tok(REC))), Ident, Tok(ASSIGN), Term, Tok(IN), Term).Map(applyLet)
 	Ite.Pattern = Seq(Tok(IF), Term, Tok(THEN), Term, Tok(ELSE), Term).Map(applyIte)
+	// 变量和函数都使用 let 声明, 变量是零参函数, 函数是有参变量, apply 的语法就统一了
 	Apps.Pattern = Seq(SubTerm, RepSc(SubTerm)).Map(applyApps)
 
 	_Expr.Pattern = Term
@@ -247,7 +340,13 @@ func init() {
 
 func ParseExpr(s string) (terms.Term, error) { return parse(_Expr, s) }
 
-func ParsePgrm(s string) (terms.Term, error) { return parse(_Pgrm, s) }
+func ParsePgrm(s string) (*terms.Program, error) {
+	pgrm, err := parse(_Pgrm, s)
+	if err != nil {
+		return nil, err
+	}
+	return pgrm.(*terms.Program), nil
+}
 
 func parse(p Parser, s string) (terms.Term, error) {
 	toks, err := lex.Lex(s)

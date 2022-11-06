@@ -16,7 +16,7 @@ func ShowPgrm(p *Program) string {
 	return b.String()
 }
 
-func ShowDef(def *Define) string {
+func ShowDef(def *Declaration) string {
 	rhs := showTerm(def.Rhs, 0)
 	if def.Rec {
 		return fmt.Sprintf("let rec %s = %s", def.Name, rhs)
@@ -56,6 +56,12 @@ func showTerm(term Term, outerPrec int) string {
 			xs[i] = showTerm(el, 0)
 		}
 		return util.JoinStr(xs, ", ", "(", ")")
+	case *List:
+		xs := make([]string, len(t.Elms))
+		for i, el := range t.Elms {
+			xs[i] = showTerm(el, 0)
+		}
+		return util.JoinStr(xs, ", ", "[", "]")
 	case *Record:
 		xs := make([]string, len(t.Fields))
 		for i, fd := range t.Fields {
