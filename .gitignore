@@ -3,4 +3,4 @@
 .idea/
 TODO.md
 terms/dot.go
-../yae/legacy/codegen
+codegen
