@@ -2,7 +2,8 @@ package parser
 
 import (
 	"errors"
-	"github.com/goghcrow/go-parsec/lexer"
+
+	"github.com/goghcrow/lexer"
 	"github.com/goghcrow/simple-sub/terms"
 	"github.com/goghcrow/simple-sub/util"
 	"strconv"

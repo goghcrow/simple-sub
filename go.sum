@@ -1,4 +1,6 @@
-github.com/goghcrow/go-parsec v0.0.0-20221101193902-b64feffb7284 h1:ImDs4OnvIlGxGHFuK6Pgr+qO9Uoj6uYHpbpEnpC7NjQ=
-github.com/goghcrow/go-parsec v0.0.0-20221101193902-b64feffb7284/go.mod h1:95CRPUQY4MNgbROBPrDM2rDeGq27crmi07dgTjN13EE=
 github.com/goghcrow/go-parsec v0.0.0-20221102180356-2abda76c2612 h1:gA0SudlAgfXeKrOsRLn5a5dwmXR/1GikOaUy58cfELg=
 github.com/goghcrow/go-parsec v0.0.0-20221102180356-2abda76c2612/go.mod h1:95CRPUQY4MNgbROBPrDM2rDeGq27crmi07dgTjN13EE=
+github.com/goghcrow/go-parsec v0.0.0-20230122155601-1cf1b910be9d h1:mcsSNmpJraI7iLMCZRh2dkOX6XP36VyxwOWFRuiRhJE=
+github.com/goghcrow/go-parsec v0.0.0-20230122155601-1cf1b910be9d/go.mod h1:deItJv+xRCAV+SFySg+VJaxArwjRn+WCvFHdxKMb3bs=
+github.com/goghcrow/lexer v0.0.0-20230122154617-6c59c769543e h1:6/o7XYz9mm0P1ZPN9Uv5bV2yaUElfXQTW35H6R+Cii8=
+github.com/goghcrow/lexer v0.0.0-20230122154617-6c59c769543e/go.mod h1:kDVf/pex11grN/mgN7VvfPxuAP+GWPBXispHMTNb8NA=

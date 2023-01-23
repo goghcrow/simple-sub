@@ -2,7 +2,7 @@ package parser
 
 import (
 	. "github.com/goghcrow/go-parsec"
-	"github.com/goghcrow/go-parsec/lexer"
+	"github.com/goghcrow/lexer"
 	"github.com/goghcrow/simple-sub/terms"
 )
 
